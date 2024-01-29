@@ -7,7 +7,7 @@ public sealed class DistributedCacheService : IDistributedCacheService
 {
     private readonly ILogger<DistributedCacheService> _logger;
     private readonly IDistributedCache _distributedCache;
-    private const string PREFIX = "my-api-xpto_";
+    private const string PREFIX = "my-api-xpto";
 
     public DistributedCacheService(ILogger<DistributedCacheService> logger,
     IDistributedCache distributedCache)
