@@ -8,7 +8,7 @@ public static class RegisterCacheExtensions
            this IServiceCollection services)
     {
         //bool.TryParse(Environment.GetEnvironmentVariable("IS_REDIS"), out bool isRedis);
-        bool isRedis = true;
+        bool isRedis = false;
         if (isRedis)
         {
             services.AddStackExchangeRedisCache(options =>
@@ -24,6 +24,7 @@ public static class RegisterCacheExtensions
         else
         {
             services.AddDistributedMemoryCache();
+            services.AddOutputCache();
         }
 
         services.AddScoped<IDistributedCacheService, DistributedCacheService>();
