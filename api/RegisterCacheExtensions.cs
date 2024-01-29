@@ -8,7 +8,7 @@ public static class RegisterCacheExtensions
            this IServiceCollection services)
     {
         //bool.TryParse(Environment.GetEnvironmentVariable("IS_REDIS"), out bool isRedis);
-        bool isRedis = false;
+        bool isRedis = true;
         if (isRedis)
         {
             services.AddStackExchangeRedisCache(options =>

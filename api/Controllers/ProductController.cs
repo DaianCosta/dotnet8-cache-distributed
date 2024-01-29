@@ -28,28 +28,28 @@ public class ProductController : ControllerBase
     [HttpPost("/person")]
     public async Task<IActionResult> AddPerson([FromBody] Person person)
     {
-        await _distributedCacheService.GetOrCreateAsync<Person>("my-person", person, TimeSpan.FromMinutes(1));
+        await _distributedCacheService.GetOrCreateCacheAsync<Person>("my-person", person, TimeSpan.FromMinutes(1));
         return NoContent();
     }
 
     [HttpGet("/person")]
     public async Task<IActionResult> GetPerson()
     {
-        var result = await _distributedCacheService.GetAsync<Person>("my-person");
+        var result = await _distributedCacheService.GetCacheAsync<Person>("my-person");
         return Ok(result);
     }
 
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var document = await _distributedCacheService.GetAsync("my-document");
+        var document = await _distributedCacheService.GetCacheAsync<string>("my-document");
         return Ok(document);
     }
 
     [HttpGet("{document}")]
     public async Task<IActionResult> GetAdd([FromRoute] string document)
     {
-        await _distributedCacheService.GetOrCreateAsync("my-document", document, TimeSpan.FromMinutes(1));
+        await _distributedCacheService.GetOrCreateCacheAsync("my-document", document, TimeSpan.FromMinutes(1));
         return NoContent();
     }
 

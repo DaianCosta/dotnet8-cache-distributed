@@ -16,68 +16,59 @@ public sealed class DistributedCacheService : IDistributedCacheService
         _distributedCache = distributedCache;
     }
 
-    public async Task<string?> GetAsync(string key)
+
+    public async Task<T?> GetCacheAsync<T>(string key)
     {
 
-        var jsonValue = await GetCacheAsync(GenerateKey(key));
+        var jsonValue = default(T);
 
-        if (!string.IsNullOrWhiteSpace(jsonValue))
+        try
         {
-            var result = JsonSerializer.Deserialize<string>(jsonValue);
-            return result == null ? throw new InvalidOperationException() : result;
+            var getData = await _distributedCache.GetAsync(GenerateKey(key));
+            if (getData != null)
+            {
+                var serializedGetData = JsonSerializer.Deserialize<string>(getData);
+                if (!string.IsNullOrWhiteSpace(serializedGetData))
+                {
+                    jsonValue = JsonSerializer.Deserialize<T>(serializedGetData);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Error when performing cache get by key {CacheKey} {Exception} for object T", key, ex);
         }
 
-        return null;
+        return jsonValue;
     }
 
-    public async Task<T?> GetAsync<T>(string key)
-    {
-
-        var jsonValue = await GetCacheAsync(GenerateKey(key));
-
-        if (!string.IsNullOrWhiteSpace(jsonValue))
-        {
-            var result = JsonSerializer.Deserialize<T>(jsonValue);
-            return result == null ? throw new InvalidOperationException() : result;
-        }
-
-        return default(T);
-    }
-
-    public async Task<string> GetOrCreateAsync(
-            string key,
-            string value, TimeSpan expiresIn)
-    {
-        var jsonValue = await GetCacheAsync(GenerateKey(key));
-
-        if (!string.IsNullOrWhiteSpace(jsonValue))
-        {
-            var result = JsonSerializer.Deserialize<string>(jsonValue);
-            return result == null ? throw new InvalidOperationException() : result;
-        }
-
-        var options = CreateDistributedCacheEntryOptions(expiresIn);
-
-        await SetCacheAsync(GenerateKey(key), value, options);
-
-        return value;
-    }
-
-    public async Task<T> GetOrCreateAsync<T>(
+    public async Task<T> GetOrCreateCacheAsync<T>(
             string key,
             T value, TimeSpan expiresIn)
     {
-        var jsonValue = await GetCacheAsync(GenerateKey(key));
-
-        if (!string.IsNullOrWhiteSpace(jsonValue))
+        try
         {
-            var result = JsonSerializer.Deserialize<T>(jsonValue);
-            return result == null ? throw new InvalidOperationException() : result;
+            var jsonValue = await _distributedCache.GetAsync(GenerateKey(key));
+
+            if (jsonValue != null)
+            {
+                var result = JsonSerializer.Deserialize<T>(jsonValue);
+
+                return result == null ? throw new InvalidOperationException() : result;
+            }
+
+            var options = CreateDistributedCacheEntryOptions(expiresIn);
+
+
+            var jsonValueSerialize = JsonSerializer.Serialize(value);
+            var jsonValueBytes = JsonSerializer.SerializeToUtf8Bytes(jsonValueSerialize);
+            await _distributedCache.SetAsync(GenerateKey(key), jsonValueBytes, options);
+
         }
-
-        var options = CreateDistributedCacheEntryOptions(expiresIn);
-
-        await SetCacheAsync(GenerateKey(key), value, options);
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Error when performing the set in the cache by key {CacheKey} {Exception}", key, ex);
+        }
 
         return value;
     }
@@ -89,42 +80,6 @@ public sealed class DistributedCacheService : IDistributedCacheService
         {
             AbsoluteExpirationRelativeToNow = expiredIn
         };
-    }
-
-
-    private async Task SetCacheAsync<T>(string key, T value, DistributedCacheEntryOptions options)
-    {
-        if (value == null)
-        {
-            return;
-        }
-
-        try
-        {
-            var jsonValue = JsonSerializer.Serialize(value);
-            await _distributedCache.SetStringAsync(GenerateKey(key), jsonValue, options);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning("Erro ao realizar o set no cache pela chave {CacheKey} {Exception}", key, ex);
-        }
-    }
-
-    private async Task<string?> GetCacheAsync(string key)
-    {
-        var jsonValue = string.Empty;
-
-        try
-        {
-            jsonValue = await _distributedCache
-                .GetStringAsync(GenerateKey(key));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning("Erro ao realizar o get no cache pela chave {CacheKey} {Exception}", key, ex);
-        }
-
-        return jsonValue;
     }
 
     private string GenerateKey(string key)
