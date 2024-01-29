@@ -1,10 +1,7 @@
 using System.Text;
-using System.Text.Json;
-using api.Services;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NSubstitute.Extensions;
 using NSubstitute.ReturnsExtensions;
 
 namespace api.Services;
