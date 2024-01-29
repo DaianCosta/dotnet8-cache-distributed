@@ -84,7 +84,7 @@ public sealed class DistributedCacheService : IDistributedCacheService
 
     private string GenerateKey(string key)
     {
-        return $"{PREFIX}_{key}";
+        return $"{PREFIX}:{key}";
     }
 
 }
