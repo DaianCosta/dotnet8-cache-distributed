@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -22,11 +23,12 @@ public class DistributedCacheServiceTest
     public async Task GetCache_SingleText_ReturnsValueString()
     {
         var key = "my-api-xpto_my-person";
-        var value = "014.838.290-81";
-        var valueSerialize = Encoding.UTF8.GetBytes(value);
+            var value = "014.838.290-81";
+            var jsonValueSerialize = JsonSerializer.Serialize(value);
+            var jsonValueBytes = JsonSerializer.SerializeToUtf8Bytes(jsonValueSerialize);
 
         _distributedCache.GetAsync(Arg.Any<string>())
-        .Returns(valueSerialize);
+        .Returns(jsonValueBytes);
 
         var result = await _distributedCacheService.GetCacheAsync<string>(key);
 
